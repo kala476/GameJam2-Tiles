@@ -10,8 +10,7 @@ public class TileBehaviour : MonoBehaviour
     public ConstantForce force;
     public bool isInPlayerRadius;
 	public bool pushedAwayFromPLayer = true;
-	public bool docked = false;
-	public enum TileState { outOfRange, inRangeIdle, canBeAngled, IsAngled }
+	public enum TileState { outOfRange, inRangeIdle, canBeAngled, isAngled }
 	public TileState tileState;
 	Coroutine attractionRoutine;
 
@@ -69,7 +68,7 @@ public class TileBehaviour : MonoBehaviour
 		{
 			SetColor(Color.red);
 		}
-		else if (tileState == TileState.IsAngled)
+		else if (tileState == TileState.isAngled)
 		{
 			SetColor(Color.yellow);
 		}
@@ -100,7 +99,6 @@ public class TileBehaviour : MonoBehaviour
 	{
 		FixedJoint temporarySpringJoint = gameObject.AddComponent<FixedJoint>();
 		temporarySpringJoint.connectedBody = connectedBody.GetComponent<Rigidbody>();
-		docked = true;
 	}
 
 	

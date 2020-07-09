@@ -1,29 +1,29 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
-using UnityEngine.UIElements;
 
 public class Angler : MonoBehaviour
 {
     public Transform anglingBall;
     public Camera mainCamera;
     int tileLayerMask;
+    int floorLayerMask;
     public AnimationCurve tileAttractiontoSqrDistance;
     public float maxAttractionForce;
     public float anglingRadius;
-    public bool attractingTiles;
 
     List<TileBehaviour> dockedTiles = new List<TileBehaviour>();
     List<Coroutine> runningAttractions = new List<Coroutine>();
-    TileBehaviour[] tilesInRadiusLastFrame;
-    TileBehaviour[] tilesInRadiusThisFrame;
+    List<TileBehaviour> tilesInRadiusLastFrame;
+    List<TileBehaviour> tilesInRadiusThisFrame;
 
+    public enum TileSelection { simpleProximity, sphereRaycast}
+    public TileSelection tileSelection;
     // Start is called before the first frame update
     void Start()
     {
         tileLayerMask = LayerMask.GetMask("Tile");
+        floorLayerMask = LayerMask.GetMask("Floor");
     }
 
     // Update is called once per frame
@@ -34,30 +34,36 @@ public class Angler : MonoBehaviour
         tilesInRadiusThisFrame = GetMovableColliders();
         GetMovableColliders();
 
-        //set feedback 
-        if (tilesInRadiusLastFrame != null)
-        {
-            for (int i = 0; i < tilesInRadiusLastFrame.Length; i++)
+		//set feedback 
+		if (!Input.GetKey(KeyCode.Mouse0)){
+            if (tilesInRadiusLastFrame != null)
             {
-                tilesInRadiusLastFrame[i].tileState = TileBehaviour.TileState.inRangeIdle;
+                for (int i = 0; i < tilesInRadiusLastFrame.Count; i++)
+                {
+                    if (tilesInRadiusLastFrame[i].tileState != TileBehaviour.TileState.isAngled && tilesInRadiusLastFrame[i].tileState != TileBehaviour.TileState.outOfRange)
+                    {
+                        tilesInRadiusLastFrame[i].tileState = TileBehaviour.TileState.inRangeIdle;
+                    }
+                }
             }
-        }
 
-        if (tilesInRadiusLastFrame != null)
-        {
-            for (int i = 0; i < tilesInRadiusThisFrame.Length; i++)
+            if (tilesInRadiusLastFrame != null)
             {
-                tilesInRadiusThisFrame[i].tileState = TileBehaviour.TileState.canBeAngled;
-            }
-        }
+                for (int i = 0; i < tilesInRadiusThisFrame.Count; i++)
+                { if (tilesInRadiusThisFrame[i].tileState == TileBehaviour.TileState.inRangeIdle)
+                    {
+                        tilesInRadiusThisFrame[i].tileState = TileBehaviour.TileState.canBeAngled;
+                    }
+                }
+            } }
 
 
         //on button pressed start levitating the tiles towads the rod
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            if (tilesInRadiusThisFrame != null && tilesInRadiusLastFrame.Length > 0)
+            if (tilesInRadiusThisFrame != null && tilesInRadiusLastFrame.Count > 0)
             {
-                for (int i = 0; i < tilesInRadiusLastFrame.Length; i++)
+                for (int i = 0; i < tilesInRadiusLastFrame.Count; i++)
                 {
                     TileBehaviour tile = tilesInRadiusThisFrame[i];
 
@@ -68,13 +74,13 @@ public class Angler : MonoBehaviour
                     {
                         runningAttractions.Add(StartCoroutine(AttractTile(tile)));
                         dockedTiles.Add(tile);
-                        tile.tileState = TileBehaviour.TileState.IsAngled;
+                        tile.tileState = TileBehaviour.TileState.isAngled;
                     }
                 }
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha2)) 
+        if (Input.GetKeyUp(KeyCode.Mouse0)) 
         {
 			for (int i = 0; i < runningAttractions.Count; i++)
 			{
@@ -94,7 +100,7 @@ public class Angler : MonoBehaviour
 
     private IEnumerator AttractTile(TileBehaviour tile) 
     {
-        float maxTileDistance = 10f;
+        float maxTileDistance = 30f;
         float distanceTreshold = 0.5f;
         bool tileDocked = false;
 
@@ -133,14 +139,39 @@ public class Angler : MonoBehaviour
         tile.SetConstancForce(Vector3.zero);
     }
 
-    private TileBehaviour[] GetMovableColliders() 
+    private List<TileBehaviour> GetMovableColliders() 
     {
-        Collider[] collidersInRadius = Physics.OverlapSphere(anglingBall.transform.position, anglingRadius, tileLayerMask);
-        TileBehaviour[] tilesInRadius = new TileBehaviour[collidersInRadius.Length];
+        Vector3 overlapPoint = Vector3.zero;
 
+        // set centre point from which the ovelap sphere will be checked
+        if (tileSelection == TileSelection.simpleProximity)
+        {
+            // the middle off the angler
+            overlapPoint = anglingBall.transform.position;
+        }
+        else if (tileSelection == TileSelection.sphereRaycast) 
+        {
+            //raycast from the camera through the angler
+            Vector2 ballScreenPoint = mainCamera.WorldToScreenPoint(anglingBall.position);
+            Ray ray = mainCamera.ScreenPointToRay(ballScreenPoint);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit, 100f, floorLayerMask)) 
+            {
+                overlapPoint = hit.point;
+            }
+
+        }
+        Collider[] collidersInRadius = Physics.OverlapSphere(overlapPoint, anglingRadius, tileLayerMask);
+        List<TileBehaviour> tilesInRadius = new List<TileBehaviour>();
 		for (int i = 0; i < collidersInRadius.Length; i++)
 		{
-            tilesInRadius[i] = collidersInRadius[i].GetComponent<TileBehaviour>();
+            TileBehaviour tile = collidersInRadius[i].GetComponent<TileBehaviour>();
+            if(tile.tileState != TileBehaviour.TileState.outOfRange) 
+            {
+                tilesInRadius.Add(tile);
+            }
+            
         }
 
         return tilesInRadius;
