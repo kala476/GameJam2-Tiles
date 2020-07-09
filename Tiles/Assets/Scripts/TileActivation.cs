@@ -18,47 +18,49 @@ public class TileActivation : MonoBehaviour
         
     }
 
-	private void OnTriggerEnter(Collider other)
-	{
+    private void OnTriggerEnter(Collider other)
+    {
 
-        if (other.tag.Equals("Tile")) 
+        if (other.tag.Equals("Tile"))
         {
             TileBehaviour tile = other.GetComponent<TileBehaviour>();
+
             if (tile != null)
             {
                 SetTileActive(tile, true);
             }
         }
-	}
+    }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.tag.Equals("Tile"))
         {
-            TileBehaviour tile = other.GetComponent<TileBehaviour>();
+           TileBehaviour tile = other.GetComponent<TileBehaviour>();
+
             if (tile != null)
             {
-                SetTileActive(tile, false);
+
+                   SetTileActive(tile, false);
+
             }
         }
     }
 
+
+
+
     void SetTileActive(TileBehaviour tile, bool value)
     {
+
         tile.isInPlayerRadius = value;
-        //physics
-        if (tile.rigid != null)
+        
+        //visuals
+		if (tile.mesh != null)
         {
-            tile.rigid.isKinematic = !value;
-        }
-
-
-        //viduals
-        if (tile.mesh != null)
-        {
-            tile.mesh.material.color = value == true ?  Settings.instance.activeTileColor : Settings.instance.inactiveTileColor;
+            tile.SetColor(value == true ? Settings.instance.activeTileColor : Settings.instance.inactiveTileColor);
 
         }
-
+        
     }
 }
