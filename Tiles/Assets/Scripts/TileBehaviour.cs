@@ -10,9 +10,9 @@ public class TileBehaviour : MonoBehaviour
     public ConstantForce force;
     public bool isInPlayerRadius;
 	public bool pushedAwayFromPLayer = true;
+	public Vector3 conservedVelovcity;
 	public enum TileState { outOfRange, inRangeIdle, canBeAngled, isAngled }
 	public TileState tileState;
-	Coroutine attractionRoutine;
 
     // Start is called before the first frame update
     void Start()
@@ -101,6 +101,15 @@ public class TileBehaviour : MonoBehaviour
 		temporarySpringJoint.connectedBody = connectedBody.GetComponent<Rigidbody>();
 	}
 
+	public void SaveVelocity() 
+	{
+		conservedVelovcity = rigid.velocity;
+	}
+
+	public void RestoreVelocity() 
+	{
+		rigid.velocity = conservedVelovcity;
+	}
 	
 
 

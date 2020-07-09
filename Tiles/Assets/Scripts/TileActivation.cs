@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Schema;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -50,8 +51,19 @@ public class TileActivation : MonoBehaviour
 
     void SetTileActive(TileBehaviour tile, bool value)
     {
-
         tile.isInPlayerRadius = value;
-        tile.tileState = value == true ? TileBehaviour.TileState.inRangeIdle : TileBehaviour.TileState.outOfRange;
+
+        if (value == true) 
+        {
+            tile.tileState = TileBehaviour.TileState.inRangeIdle;
+            if (Settings.instance.conserveVelocity == true)
+                tile.RestoreVelocity();
+        }
+
+        if (value == false) 
+        {
+            tile.tileState = TileBehaviour.TileState.outOfRange;
+            tile.SaveVelocity();
+        }
     }
 }
