@@ -10,11 +10,11 @@ public class CharacterController : MonoBehaviour
     public float maxHeadRotY;
     public float maxHeadRotX;
     public float rotSpeed = 500;
-    private float rotY;
-    private float rotX;
-    private float headRotY;
-    private float headRotX;
-    private float bodyRotX;
+    private float thisFrameRotY;
+    private float thisFrameRotX;
+    private float targetHeadRotY;
+    private float targetHeadRotX;
+    private float targetBodyRotX;
 
     // Start is called before the first frame update
     void Start()
@@ -28,35 +28,36 @@ public class CharacterController : MonoBehaviour
         float horizontalInput = Input.GetAxis("Vertical");
         float verticalInput = Input.GetAxis("Horizontal");
 
-        rotY += Input.GetAxis("Mouse Y");
-        rotY = Mathf.Clamp(rotY, maxHeadRotY * -1, maxHeadRotY);
-        headRotY = -rotY;
+        thisFrameRotY = Input.GetAxis("Mouse Y") * Time.deltaTime * rotSpeed;
+        thisFrameRotY = Mathf.Clamp(thisFrameRotY, maxHeadRotY * -1, maxHeadRotY);
+        targetHeadRotY += thisFrameRotY;
 
-        rotX = Input.GetAxis("Mouse X");
-        headRotX += rotX;
+        thisFrameRotX = Input.GetAxis("Mouse X") * Time.deltaTime * rotSpeed;
+        targetHeadRotX += thisFrameRotX;
 
         // wenn headRotX sein max erreicht, dreht sich der Körper weiter und headRotX bleibt beim maximum.
         // sobald es wieder kleiner wird, hört der Körper auf sich zu drehen
-        if (Mathf.Abs(headRotX) > maxHeadRotX)
+        if (Mathf.Abs(targetHeadRotX) > maxHeadRotX)
         {
             // maximal + maxHeadRotX
-            if (headRotX > maxHeadRotX)
+            if (targetHeadRotX > maxHeadRotX)
             {
-                headRotX = maxHeadRotX;
+                targetHeadRotX = maxHeadRotX;
             }
             // minimal - maxHeadRotX
-            else if (headRotX < maxHeadRotX)
+            else if (targetHeadRotX < maxHeadRotX)
             {
-                headRotX = - maxHeadRotX;
+                targetHeadRotX = - maxHeadRotX;
             }
 
-            bodyRotX += rotX;
+            targetBodyRotX += thisFrameRotX;
         }
 
 
         this.transform.Translate(verticalInput * Time.deltaTime *movementSpeed, 0,  horizontalInput * Time.deltaTime *movementSpeed);
-        this.head.transform.eulerAngles = new Vector3(headRotY * Time.deltaTime * rotSpeed, headRotX * Time.deltaTime * rotSpeed, 0);
-        this.transform.localEulerAngles = new Vector3(this.transform.localEulerAngles.x, bodyRotX, this.transform.localEulerAngles.z);
+        
+        this.head.transform.eulerAngles = new Vector3(-targetHeadRotY, targetHeadRotX, 0);
+        this.transform.localEulerAngles = new Vector3(this.transform.localEulerAngles.x, targetBodyRotX, this.transform.localEulerAngles.z);
 
         //Vector3 camLookDirection = this.transform.position - thirdPersonCam.transform.position;
         //camLookDirection = camLookDirection.normalized;
