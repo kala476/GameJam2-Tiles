@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 
 public class TileBehaviour : MonoBehaviour
@@ -8,9 +9,12 @@ public class TileBehaviour : MonoBehaviour
     public Rigidbody rigid;
     public ConstantForce force;
     public bool isInPlayerRadius;
-    public bool stateChangeAllowed = false;
-	public float stateChangeCoolDown = 0.1f;
 	public bool pushedAwayFromPLayer = true;
+	public bool docked = false;
+	public enum TileState { outOfRange, inRangeIdle, canBeAngled, IsAngled }
+	public TileState tileState;
+	Coroutine attractionRoutine;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -55,6 +59,26 @@ public class TileBehaviour : MonoBehaviour
 			rigid.isKinematic = true;
 		}
 
+		//SetColor depending onState
+
+		if (tileState == TileState.outOfRange)
+		{
+			SetColor(Color.black);
+		}
+		else if (tileState == TileState.inRangeIdle)
+		{
+			SetColor(Color.red);
+		}
+		else if (tileState == TileState.IsAngled)
+		{
+			SetColor(Color.yellow);
+		}
+		else if (tileState == TileState.canBeAngled)
+		{
+			SetColor(Color.blue);
+		}
+
+
 	}
 
 	public void LateUpdate()
@@ -71,6 +95,16 @@ public class TileBehaviour : MonoBehaviour
 	{
 		mesh.material.color = color;
 	}
+
+	public void DockToRigidbody(Rigidbody connectedBody) 
+	{
+		FixedJoint temporarySpringJoint = gameObject.AddComponent<FixedJoint>();
+		temporarySpringJoint.connectedBody = connectedBody.GetComponent<Rigidbody>();
+		docked = true;
+	}
+
+	
+
 
 }
 

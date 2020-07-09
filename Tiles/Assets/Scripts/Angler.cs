@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using UnityEngine.UIElements;
 
 public class Angler : MonoBehaviour
@@ -11,9 +12,14 @@ public class Angler : MonoBehaviour
     int tileLayerMask;
     public AnimationCurve tileAttractiontoSqrDistance;
     public float maxAttractionForce;
+    public float anglingRadius;
+    public bool attractingTiles;
 
-    Coroutine attractionRoutine;
-    TileBehaviour currentlyAttractedTile;
+    List<TileBehaviour> dockedTiles = new List<TileBehaviour>();
+    List<Coroutine> runningAttractions = new List<Coroutine>();
+    TileBehaviour[] tilesInRadiusLastFrame;
+    TileBehaviour[] tilesInRadiusThisFrame;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,50 +29,74 @@ public class Angler : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0)) 
+        //get Tiles that can be fished this frame
+        tilesInRadiusLastFrame = tilesInRadiusThisFrame;
+        tilesInRadiusThisFrame = GetMovableColliders();
+        GetMovableColliders();
+
+        //set feedback 
+        if (tilesInRadiusLastFrame != null)
         {
-            //raycast
-            Vector2 ballScreenPoint = mainCamera.WorldToScreenPoint(anglingBall.position);
-            Ray ray = mainCamera.ScreenPointToRay(ballScreenPoint);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit, 100f, tileLayerMask)) 
+            for (int i = 0; i < tilesInRadiusLastFrame.Length; i++)
             {
-                Collider hitCollider = hit.collider;
-                GameObject gameObject = hitCollider.gameObject;
-                TileBehaviour tile = hitCollider.GetComponent<TileBehaviour>();
+                tilesInRadiusLastFrame[i].tileState = TileBehaviour.TileState.inRangeIdle;
+            }
+        }
 
-                if (tile != null) 
+        if (tilesInRadiusLastFrame != null)
+        {
+            for (int i = 0; i < tilesInRadiusThisFrame.Length; i++)
+            {
+                tilesInRadiusThisFrame[i].tileState = TileBehaviour.TileState.canBeAngled;
+            }
+        }
+
+
+        //on button pressed start levitating the tiles towads the rod
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            if (tilesInRadiusThisFrame != null && tilesInRadiusLastFrame.Length > 0)
+            {
+                for (int i = 0; i < tilesInRadiusLastFrame.Length; i++)
                 {
+                    TileBehaviour tile = tilesInRadiusThisFrame[i];
+
                     tile.pushedAwayFromPLayer = false;
                     tile.SetConstancForce(Vector3.zero);
 
-                    currentlyAttractedTile = tile;
-                    attractionRoutine = StartCoroutine(StartAttractingTile(currentlyAttractedTile));
+                    if (dockedTiles.Contains(tile) == false)
+                    {
+                        runningAttractions.Add(StartCoroutine(AttractTile(tile)));
+                        dockedTiles.Add(tile);
+                        tile.tileState = TileBehaviour.TileState.IsAngled;
+                    }
                 }
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2)) 
+        {
+			for (int i = 0; i < runningAttractions.Count; i++)
+			{
+                StopCoroutine(runningAttractions[i]);
+            }
+
+			for (int i = 0; i < dockedTiles.Count; i++)
+			{
+                dockedTiles[i].tileState = TileBehaviour.TileState.inRangeIdle;
+                ReturnTileToDefaultState(dockedTiles[i]);
 
             }
+
+            dockedTiles.Clear();
         }
-        if (Input.GetKeyUp(KeyCode.Mouse0))
-        {
-            if (attractionRoutine != null && currentlyAttractedTile != null)
-            {
-                Debug.Log("stopping behaviour");
-                StopCoroutine(attractionRoutine);
-                ReturnTileToDefaultState(currentlyAttractedTile);
-            }
-        }
-        
     }
 
-    private IEnumerator StartAttractingTile(TileBehaviour tile) 
+    private IEnumerator AttractTile(TileBehaviour tile) 
     {
-
         float maxTileDistance = 10f;
-        float distanceTreshold = 1f;
+        float distanceTreshold = 0.5f;
         bool tileDocked = false;
-
-        tile.SetColor(Color.yellow);
 
         while (tileDocked == false)
         {
@@ -81,12 +111,10 @@ public class Angler : MonoBehaviour
             }
             else
             {
-                // when tile is close enough create a temporary spring joint
-
-                SpringJoint temporarySpringJoint = tile.gameObject.AddComponent<SpringJoint>();
-                temporarySpringJoint.connectedBody = anglingBall.GetComponent<Rigidbody>();
+                // when tile is close enough create a temporary fixed joint
+                tile.DockToRigidbody(anglingBall.GetComponent<Rigidbody>());
                 tileDocked = true;
-            }
+             }
             yield return null;
         }
      }
@@ -94,15 +122,28 @@ public class Angler : MonoBehaviour
     private void ReturnTileToDefaultState(TileBehaviour tile)
     {
         //remove spring joint
-        SpringJoint temporarySpringJoint = tile.gameObject.GetComponent<SpringJoint>();
+        FixedJoint temporarySpringJoint = tile.gameObject.GetComponent<FixedJoint>();
         if (temporarySpringJoint != null)
         {
             Component.Destroy(temporarySpringJoint);
         }
 
-
         //reset forces
-        tile.pushedAwayFromPLayer = true;
+        tile.pushedAwayFromPLayer = Settings.instance.tilesPushedByPlayer;
         tile.SetConstancForce(Vector3.zero);
     }
+
+    private TileBehaviour[] GetMovableColliders() 
+    {
+        Collider[] collidersInRadius = Physics.OverlapSphere(anglingBall.transform.position, anglingRadius, tileLayerMask);
+        TileBehaviour[] tilesInRadius = new TileBehaviour[collidersInRadius.Length];
+
+		for (int i = 0; i < collidersInRadius.Length; i++)
+		{
+            tilesInRadius[i] = collidersInRadius[i].GetComponent<TileBehaviour>();
+        }
+
+        return tilesInRadius;
+
+    } 
 }

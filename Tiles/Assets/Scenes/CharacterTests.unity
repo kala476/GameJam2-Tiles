@@ -14240,7 +14240,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   activeTileColor: {r: 1, g: 0, b: 0, a: 1}
   inactiveTileColor: {r: 0, g: 0, b: 0, a: 0}
-  tilesPushedByPlayer: 1
+  tilesPushedByPlayer: 0
   forceToSqrDistance:
     serializedVersion: 2
     m_Curve:
@@ -51317,7 +51317,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1864128483}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.4126024, y: 5.153781, z: 0.5085211}
+  m_LocalPosition: {x: 4.4126024, y: -16.3, z: 0.5085211}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 882939706}
@@ -57384,12 +57384,12 @@ PrefabInstance:
     - target: {fileID: 3705330544404059012, guid: a4d60ae75aa7b214b91e2b78f92be35b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.2447879
+      value: 4.9
       objectReference: {fileID: 0}
     - target: {fileID: 3705330544404059012, guid: a4d60ae75aa7b214b91e2b78f92be35b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -20.2
+      value: -3.5
       objectReference: {fileID: 0}
     - target: {fileID: 3705330544404059012, guid: a4d60ae75aa7b214b91e2b78f92be35b,
         type: 3}
@@ -58856,6 +58856,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Character
+      objectReference: {fileID: 0}
+    - target: {fileID: 3125308596566478078, guid: 68d4a41208c40094e9c7a85d91c24a45,
+        type: 3}
+      propertyPath: anglingRadius
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3125308597104799100, guid: 68d4a41208c40094e9c7a85d91c24a45,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.66
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 68d4a41208c40094e9c7a85d91c24a45, type: 3}

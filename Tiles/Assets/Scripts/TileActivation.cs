@@ -40,9 +40,7 @@ public class TileActivation : MonoBehaviour
 
             if (tile != null)
             {
-
                    SetTileActive(tile, false);
-
             }
         }
     }
@@ -54,13 +52,6 @@ public class TileActivation : MonoBehaviour
     {
 
         tile.isInPlayerRadius = value;
-        
-        //visuals
-		if (tile.mesh != null)
-        {
-            tile.SetColor(value == true ? Settings.instance.activeTileColor : Settings.instance.inactiveTileColor);
-
-        }
-        
+        tile.tileState = value == true ? TileBehaviour.TileState.inRangeIdle : TileBehaviour.TileState.outOfRange;
     }
 }
