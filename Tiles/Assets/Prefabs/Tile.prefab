@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8121317837024650794}
   - component: {fileID: 908282992}
   - component: {fileID: 2834591485515814838}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Tile
   m_TagString: Tile
   m_Icon: {fileID: 0}
@@ -31,7 +31,7 @@ Transform:
   m_GameObject: {fileID: 6813094227146267842}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.2434654, y: 5.842, z: -2.03}
-  m_LocalScale: {x: 1, y: 0.2, z: 1.0000005}
+  m_LocalScale: {x: 1, y: 0.2, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -128,6 +128,8 @@ MonoBehaviour:
   rigid: {fileID: 0}
   force: {fileID: 0}
   isInPlayerRadius: 0
+  changedThisFrame: 0
+  pushedAwayFromPLayer: 1
 --- !u!75 &2834591485515814838
 ConstantForce:
   m_ObjectHideFlags: 0
