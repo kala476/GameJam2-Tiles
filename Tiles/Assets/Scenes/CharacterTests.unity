@@ -4264,8 +4264,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movementSpeed: 5
   head: {fileID: 1936909280}
-  maxHeadRotY: 15
-  maxHeadRotX: 15
+  maxHeadRotY: 40
+  maxHeadRotX: 40
   rotSpeed: 1000
 --- !u!4 &153840445
 Transform:

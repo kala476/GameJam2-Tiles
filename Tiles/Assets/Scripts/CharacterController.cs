@@ -29,8 +29,10 @@ public class CharacterController : MonoBehaviour
         float verticalInput = Input.GetAxis("Horizontal");
 
         thisFrameRotY = Input.GetAxis("Mouse Y") * Time.deltaTime * rotSpeed;
-        thisFrameRotY = Mathf.Clamp(thisFrameRotY, maxHeadRotY * -1, maxHeadRotY);
+        //thisFrameRotY = Mathf.Clamp(thisFrameRotY, maxHeadRotY * -1, maxHeadRotY);
         targetHeadRotY += thisFrameRotY;
+        targetHeadRotY = Mathf.Clamp(targetHeadRotY, maxHeadRotY * -1, maxHeadRotY);
+
 
         thisFrameRotX = Input.GetAxis("Mouse X") * Time.deltaTime * rotSpeed;
         targetHeadRotX += thisFrameRotX;
@@ -56,8 +58,8 @@ public class CharacterController : MonoBehaviour
 
         this.transform.Translate(verticalInput * Time.deltaTime *movementSpeed, 0,  horizontalInput * Time.deltaTime *movementSpeed);
         
-        this.head.transform.eulerAngles = new Vector3(-targetHeadRotY, targetHeadRotX, 0);
-        this.transform.localEulerAngles = new Vector3(this.transform.localEulerAngles.x, targetBodyRotX, this.transform.localEulerAngles.z);
+        this.head.transform.localEulerAngles = new Vector3(-targetHeadRotY, targetHeadRotX, 0);
+        this.transform.eulerAngles = new Vector3(this.transform.eulerAngles.x, targetBodyRotX, this.transform.eulerAngles.z);
 
         //Vector3 camLookDirection = this.transform.position - thirdPersonCam.transform.position;
         //camLookDirection = camLookDirection.normalized;
