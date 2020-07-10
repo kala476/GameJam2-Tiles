@@ -6,7 +6,7 @@ using DG.Tweening;
 
 public class floatingBehaviour : MonoBehaviour
 {
-    public bool activateFloating = true;
+    public bool activateFloating;
     //public int startPushStrength;
     public float torqueStrength;
     public float duration;
@@ -14,18 +14,44 @@ public class floatingBehaviour : MonoBehaviour
     private Rigidbody rigid;
     private Coroutine lastRoutine;
     private bool isFloating;
+    private Tweener tween;
 
     // Start is called before the first frame update
     void Start()
     {
         rigid = this.transform.GetComponent<Rigidbody>();
+        FloatCheck();
+
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
+    {
+        FloatCheck();
+    }
+
+    private IEnumerator Float()
+    {
+        isFloating = true;
+
+        while (activateFloating && !rigid.isKinematic)
+        {
+
+            Debug.LogError(" Float()");
+            tween = this.transform.DOBlendableMoveBy(new Vector3(0, -1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
+            yield return new WaitForSeconds(duration);
+            tween = this.transform.DOBlendableMoveBy(new Vector3(0, 1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
+            yield return new WaitForSeconds(duration);
+
+        }
+        yield return null;
+
+    }
+
+    private void FloatCheck()
     {
         // when activatefloating is true and object not already floating
-        if (activateFloating && !isFloating)
+        if (activateFloating && !isFloating && !rigid.isKinematic)
         {
 
             float randomRange1 = UnityEngine.Random.Range(0, 10);
@@ -47,6 +73,7 @@ public class floatingBehaviour : MonoBehaviour
             {
                 StopCoroutine(lastRoutine);
             }
+            DOTween.Kill(this.transform);
             isFloating = false;
             rigid.useGravity = true;
 
@@ -54,32 +81,17 @@ public class floatingBehaviour : MonoBehaviour
         }
         if (rigid.isKinematic)
         {
-            StopCoroutine(lastRoutine);
+
+            if (lastRoutine != null)
+            {
+                StopCoroutine(lastRoutine);
+            }
+            DOTween.Kill(this.transform);
+
             isFloating = false;
 
             this.rigid.velocity = Vector3.zero;
             this.rigid.angularVelocity = Vector3.zero;
         }
-    }
-
-    private IEnumerator Float()
-    {
-        isFloating = true;
-
-
-        while (activateFloating && !rigid.isKinematic)
-        {
-
-            this.transform.DOBlendableMoveBy(new Vector3(0, -1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
-            yield return new WaitForSeconds(duration);
-            this.transform.DOBlendableMoveBy(new Vector3(0, 1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
-            yield return new WaitForSeconds(duration);
-
-        }
-        yield return null;
-
-        
-
-
     }
 }
