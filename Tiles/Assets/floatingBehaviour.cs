@@ -37,7 +37,7 @@ public class floatingBehaviour : MonoBehaviour
         while (activateFloating && !rigid.isKinematic)
         {
 
-            Debug.LogError(" Float()");
+            //Debug.LogError(" Float()");
             tween = this.transform.DOBlendableMoveBy(new Vector3(0, -1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
             yield return new WaitForSeconds(duration);
             tween = this.transform.DOBlendableMoveBy(new Vector3(0, 1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
