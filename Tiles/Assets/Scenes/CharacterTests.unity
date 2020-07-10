@@ -31234,6 +31234,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1156612362}
+  - component: {fileID: 1156612363}
   m_Layer: 0
   m_Name: TilesContainer (2)
   m_TagString: Untagged
@@ -31544,6 +31545,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1156612363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156612361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2993c95c74e30d848b6d4451ebfd9c24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilePrefabs:
+  - {fileID: 1103159885454266880, guid: 6811373f6e8720744b39bba5ddc335db, type: 3}
+  - {fileID: 6446298310422874993, guid: 2f34c0a5fff2ff84cb24c07eb4f8e3e9, type: 3}
+  - {fileID: 1141200280721337595, guid: 3808e3485f124f242959153a8eeeb7ef, type: 3}
+  - {fileID: 3676720658725742944, guid: 7ae4569dab8a7684e8a3e4d403b52757, type: 3}
 --- !u!4 &1158275045 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3705330544404059012, guid: a4d60ae75aa7b214b91e2b78f92be35b,
@@ -51847,6 +51865,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1864128484}
+  - component: {fileID: 1864128485}
   m_Layer: 0
   m_Name: TilesContainer
   m_TagString: Untagged
@@ -52156,6 +52175,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1864128485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1864128483}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2993c95c74e30d848b6d4451ebfd9c24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tilePrefabs:
+  - {fileID: 1103159885454266880, guid: 6811373f6e8720744b39bba5ddc335db, type: 3}
+  - {fileID: 6446298310422874993, guid: 2f34c0a5fff2ff84cb24c07eb4f8e3e9, type: 3}
+  - {fileID: 1141200280721337595, guid: 3808e3485f124f242959153a8eeeb7ef, type: 3}
+  - {fileID: 3676720658725742944, guid: 7ae4569dab8a7684e8a3e4d403b52757, type: 3}
 --- !u!4 &1866183672 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3705330544404059012, guid: a4d60ae75aa7b214b91e2b78f92be35b,
