@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class TileBehaviour : MonoBehaviour
 {
-    public MeshRenderer mesh;
+	public bool active;
+	public MeshRenderer mesh;
     public Rigidbody rigid;
     public ConstantForce force;
     public bool isInPlayerRadius;
@@ -13,6 +14,8 @@ public class TileBehaviour : MonoBehaviour
 	public Vector3 conservedVelovcity;
 	public enum TileState { outOfRange, inRangeIdle, canBeAngled, isAngled }
 	public TileState tileState;
+	public Solid solid = null;
+	
 
     // Start is called before the first frame update
     void Start()
@@ -25,58 +28,60 @@ public class TileBehaviour : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		if (isInPlayerRadius)
+		if (active)
 		{
-			//pushaway from the player depended in distance;
-			if (pushedAwayFromPLayer && Settings.instance.tilesPushedByPlayer)
+			if (isInPlayerRadius)
 			{
-				Vector3 vecToPlayer = this.gameObject.transform.position - new Vector3(Settings.instance.player.transform.position.x, this.gameObject.transform.position.y, Settings.instance.player.transform.position.z); ;
-				float sqrDisToPlayer = vecToPlayer.sqrMagnitude;
+				//pushaway from the player depended in distance;
+				if (pushedAwayFromPLayer && Settings.instance.tilesPushedByPlayer)
+				{
+					Vector3 vecToPlayer = this.gameObject.transform.position - new Vector3(Settings.instance.player.transform.position.x, this.gameObject.transform.position.y, Settings.instance.player.transform.position.z); ;
+					float sqrDisToPlayer = vecToPlayer.sqrMagnitude;
 
-				
-				// pushing away
-				if (sqrDisToPlayer < Settings.instance.maxSqrPushDistance)
-				{
-					float forceValue = Settings.instance.forceToSqrDistance.Evaluate(1f - (Settings.instance.maxSqrPushDistance - sqrDisToPlayer)) * Settings.instance.MaxPushForce;
-					Vector3 forceVector = vecToPlayer.normalized * forceValue;
-					SetConstancForce(forceVector);
-				}
-				else
-				{
-					SetConstancForce(Vector3.zero);
+
+					// pushing away
+					if (sqrDisToPlayer < Settings.instance.maxSqrPushDistance)
+					{
+						float forceValue = Settings.instance.forceToSqrDistance.Evaluate(1f - (Settings.instance.maxSqrPushDistance - sqrDisToPlayer)) * Settings.instance.MaxPushForce;
+						Vector3 forceVector = vecToPlayer.normalized * forceValue;
+						SetConstancForce(forceVector);
+					}
+					else
+					{
+						SetConstancForce(Vector3.zero);
+					}
 				}
 			}
-		}
 
-		if (isInPlayerRadius && rigid.isKinematic)
-		{
-			rigid.isKinematic = false;
-		}
-		else if (!isInPlayerRadius && !rigid.isKinematic)
-		{
+			if (isInPlayerRadius && rigid.isKinematic)
+			{
+				rigid.isKinematic = false;
+			}
+			else if (!isInPlayerRadius && !rigid.isKinematic)
+			{
 
-			rigid.isKinematic = true;
-		}
+				rigid.isKinematic = true;
+			}
 
-		//SetColor depending onState
+			//SetColor depending onState
 
-		if (tileState == TileState.outOfRange)
-		{
-			SetColor(Color.black);
+			if (tileState == TileState.outOfRange)
+			{
+				SetColor(Color.black);
+			}
+			else if (tileState == TileState.inRangeIdle)
+			{
+				SetColor(Color.red);
+			}
+			else if (tileState == TileState.isAngled)
+			{
+				SetColor(Color.yellow);
+			}
+			else if (tileState == TileState.canBeAngled)
+			{
+				SetColor(Color.blue);
+			}
 		}
-		else if (tileState == TileState.inRangeIdle)
-		{
-			SetColor(Color.red);
-		}
-		else if (tileState == TileState.isAngled)
-		{
-			SetColor(Color.yellow);
-		}
-		else if (tileState == TileState.canBeAngled)
-		{
-			SetColor(Color.blue);
-		}
-
 
 	}
 
@@ -90,7 +95,7 @@ public class TileBehaviour : MonoBehaviour
 		force.force = forceVector;
 	}
 
-	public void SetColor(Color color) 
+	public virtual void SetColor(Color color) 
 	{
 		mesh.material.color = color;
 	}
@@ -110,7 +115,10 @@ public class TileBehaviour : MonoBehaviour
 	{
 		rigid.velocity = conservedVelovcity;
 	}
-	
+	public void SetActive(bool value) 
+	{
+		active = value;
+	}
 
 
 }

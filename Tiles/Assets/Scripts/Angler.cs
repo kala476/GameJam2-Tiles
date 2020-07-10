@@ -15,7 +15,7 @@ public class Angler : MonoBehaviour
     List<TileBehaviour> dockedTiles = new List<TileBehaviour>();
     List<Coroutine> runningAttractions = new List<Coroutine>();
     List<TileBehaviour> tilesInRadiusLastFrame;
-    List<TileBehaviour> tilesInRadiusThisFrame;
+    public List<TileBehaviour> tilesInRadiusThisFrame;
 
     public enum TileSelection { simpleProximity, sphereRaycast}
     public TileSelection tileSelection;
@@ -164,17 +164,47 @@ public class Angler : MonoBehaviour
         }
         Collider[] collidersInRadius = Physics.OverlapSphere(overlapPoint, anglingRadius, tileLayerMask);
         List<TileBehaviour> tilesInRadius = new List<TileBehaviour>();
-		for (int i = 0; i < collidersInRadius.Length; i++)
-		{
+        for (int i = 0; i < collidersInRadius.Length; i++)
+        {
             TileBehaviour tile = collidersInRadius[i].GetComponent<TileBehaviour>();
-            if(tile.tileState != TileBehaviour.TileState.outOfRange) 
+            if (tile.tileState != TileBehaviour.TileState.outOfRange)
             {
-                tilesInRadius.Add(tile);
+                // if no solid connected add this tile to list
+                if (tile.solid == null)
+                {
+                    tilesInRadius.Add(tile);
+                }
+
+                // if there are solids connected ad the whole solid, if it not yet on th list
+                else
+                {
+                    if (!tilesInRadius.Contains(tile.solid))
+                    {
+                        tilesInRadius.Add(tile.solid);
+                    }
+                }
             }
-            
+
         }
 
         return tilesInRadius;
+    }
 
-    } 
+    private void AddPolyheadronJoint(List<Rigidbody> anchors, Vector3 position, Quaternion rotation) 
+    {
+        // create new GameObject at te centre
+        GameObject go = new GameObject("Polyheadron Centre");
+        go.transform.position = position;
+        go.transform.rotation = rotation;
+        Rigidbody centreRigidbody = go.AddComponent<Rigidbody>();
+
+		// anchor allobjects to the central rigidbody
+		for (int i = 0; i < anchors.Count; i++)
+		{
+            FixedJoint fixedJoint = anchors[i].gameObject.AddComponent<FixedJoint>();
+            fixedJoint.connectedBody = centreRigidbody;
+		}
+    }
+
+    private void AddPolyheadronJoint(List<TileBehaviour> anchors, Vector3 position, Quaternion rotation) { }
 }

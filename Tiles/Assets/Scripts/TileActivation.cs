@@ -46,9 +46,6 @@ public class TileActivation : MonoBehaviour
         }
     }
 
-
-
-
     void SetTileActive(TileBehaviour tile, bool value)
     {
         tile.isInPlayerRadius = value;
@@ -56,6 +53,12 @@ public class TileActivation : MonoBehaviour
         if (value == true) 
         {
             tile.tileState = TileBehaviour.TileState.inRangeIdle;
+            if (tile.solid != null) 
+            {
+                tile.solid.tileState = TileBehaviour.TileState.inRangeIdle;
+                tile.solid.isInPlayerRadius = value;
+            }
+
             if (Settings.instance.conserveVelocity == true)
                 tile.RestoreVelocity();
         }
@@ -63,6 +66,13 @@ public class TileActivation : MonoBehaviour
         if (value == false) 
         {
             tile.tileState = TileBehaviour.TileState.outOfRange;
+
+            if (tile.solid != null)
+            {
+                tile.solid.tileState = TileBehaviour.TileState.outOfRange;
+                tile.solid.isInPlayerRadius = value;
+            }
+
             tile.SaveVelocity();
         }
     }
