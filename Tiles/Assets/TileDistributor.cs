@@ -6,6 +6,8 @@ using UnityEngine;
 public class TileDistributor : MonoBehaviour
 {
     [SerializeField] List<GameObject> tilePrefabs;
+    public float minFloatY = 1;
+    public float maxFloatY = 7;
 
     // Start is called before the first frame update
     void Start()
@@ -15,7 +17,27 @@ public class TileDistributor : MonoBehaviour
 
     private void OnEnable()
     {
-        ReplaceTiles();
+        //ReplaceTiles();
+        FloatHalf();
+    }
+
+    private void FloatHalf()
+    {
+        foreach (Transform child in this.transform)
+        {
+            int randInt = UnityEngine.Random.Range(0, 2);
+            if (randInt == 1)
+            {
+                float floatHeight = UnityEngine.Random.Range(minFloatY, maxFloatY);
+                child.transform.position = new Vector3(child.transform.position.x, floatHeight, child.transform.position.z);
+                child.GetComponent<floatingBehaviour>().activateFloating = true;
+                Debug.LogError(floatHeight);
+            }
+            else
+            {
+                child.GetComponent<floatingBehaviour>().activateFloating = false;
+            }
+        }
     }
 
     private void ReplaceTiles()

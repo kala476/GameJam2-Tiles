@@ -6,19 +6,19 @@ using DG.Tweening;
 
 public class floatingBehaviour : MonoBehaviour
 {
-    [SerializeField] Rigidbody rigid;
-    public bool activateFloating;
-    public int startPushStrength;
+    public bool activateFloating = true;
+    //public int startPushStrength;
     public float torqueStrength;
-
     public float duration;
     public float moveDistanceY;
+    private Rigidbody rigid;
+    private Coroutine lastRoutine;
     private bool isFloating;
 
     // Start is called before the first frame update
     void Start()
     {
-       
+        rigid = this.transform.GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -37,13 +37,16 @@ public class floatingBehaviour : MonoBehaviour
             this.rigid.angularVelocity = new Vector3(randomRange1, randomRange2, randomRange3) * torqueStrength;
 
             rigid.useGravity = false;
-            StartCoroutine(Float());
+            lastRoutine = StartCoroutine(Float());
             isFloating = true;
 
         }
         if (!activateFloating)
         {
-            StopCoroutine(Float());
+            if (lastRoutine != null)
+            {
+                StopCoroutine(lastRoutine);
+            }
             isFloating = false;
             rigid.useGravity = true;
 
@@ -51,7 +54,7 @@ public class floatingBehaviour : MonoBehaviour
         }
         if (rigid.isKinematic)
         {
-            StopCoroutine(Float());
+            StopCoroutine(lastRoutine);
             isFloating = false;
 
             this.rigid.velocity = Vector3.zero;
@@ -63,18 +66,18 @@ public class floatingBehaviour : MonoBehaviour
     {
         isFloating = true;
 
+
         while (activateFloating && !rigid.isKinematic)
         {
 
-            Debug.LogError(Float());
             this.transform.DOBlendableMoveBy(new Vector3(0, -1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
             yield return new WaitForSeconds(duration);
             this.transform.DOBlendableMoveBy(new Vector3(0, 1 * moveDistanceY, 0), duration).SetEase(Ease.InOutSine);
             yield return new WaitForSeconds(duration);
 
         }
+        yield return null;
 
-        //yield break;
         
 
 
