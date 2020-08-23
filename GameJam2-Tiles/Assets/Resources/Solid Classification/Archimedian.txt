@@ -1,0 +1,22 @@
+Truncated Tetrahedron
+Cuboctahedron
+Rhombitetratetrahedron
+Truncated Cube
+Truncated Octahedron
+Rhombicuboctahedron
+Truncated Tetratetrahedron
+Rhombicuboctahedron
+Small Rhombicuboctahedron
+Truncated Cuboctahedron
+Great Rhombicuboctahedron
+Snub Cube
+Snub Cuboctahedron
+Icosidodecahedron
+Truncated Dodecahedron
+Truncated Icosahedron
+Rhombicosidodecahedron
+Small Rhombicosidodecahedron
+Truncated Icosidodecahedron
+Great Rhombicosidodecahedron
+Snub Dodecahedron
+Snub Icosidodecahedron

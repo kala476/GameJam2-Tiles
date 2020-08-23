@@ -1,0 +1,5 @@
+Cube
+Dodecahedron
+Icosahedron
+Octahedron
+Tetrahedron
