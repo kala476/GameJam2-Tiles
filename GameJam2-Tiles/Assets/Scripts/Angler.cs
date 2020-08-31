@@ -3,191 +3,241 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TileSelectionMode { simpleProximity, sphereRaycast }
-public class Angler : MonoBehaviour
+namespace XGD.TileQuest
 {
-    public TileSelectionMode TileSelectionMode;
-    public Camera mainCamera;
-    public AnimationCurve tileAttractiontoSqrDistance;
-    public float maxAttractionForce;
-    public float anglingRadius;
-
-    private List<Coroutine> runningAttractions = new List<Coroutine>();
-    private List<TileBehaviour> tilesInRadiusLastFrame = new List<TileBehaviour>();
-    private List<TileBehaviour> tilesInRadiusThisFrame = new List<TileBehaviour>();
-    private List<TileBehaviour> tilesDocked = new List<TileBehaviour>();
-
-    private Rigidbody tangleball;
-    private Transform tangleballTop;
-    private Transform tangleballBottom;
-
-    private LayerMask tileLayerMask;
-    private LayerMask floorLayerMask;
-
-    void Start()
+    public enum TileSelectionMode { Proximity, FromView }
+    public class Angler : MonoBehaviour
     {
-        tileLayerMask = LayerMask.GetMask("Tile");
-        floorLayerMask = LayerMask.GetMask("Floor");
+        public TileSelectionMode TileSelectionMode;
+        public Camera mainCamera;
+        public GameObject tangleballPrefab;
+        public AnimationCurve tileAttractiontoSqrDistance;
+        public float maxAttractionForce;
+        public float anglingRadius;
+        public bool generateJoints;
 
-        SetupTangleball();
-    }
+        public List<Coroutine> runningAttractions = new List<Coroutine>();
+        //private List<TileBehaviour> tilesInRadiusThisFrame = new List<TileBehaviour>();
+        public List<TileBehaviour> tilesNear = new List<TileBehaviour>();
+        public List<TileBehaviour> tilesDocked = new List<TileBehaviour>();
+        public List<Solid> availableSolids = new List<Solid>();
+        public List<Tile> availableTiles = new List<Tile>();
+        public List<int> availableTileCounts = new List<int>();
 
+        public Rigidbody tangleball;
+        private Transform tangleballTop;
+        private Transform tangleballBottom;
 
-    void SetupTangleball()
-    {
-        if (!tangleball || !tangleballTop || !tangleballBottom)
+        private LayerMask tileLayerMask;
+        private LayerMask floorLayerMask;
+
+        void Start()
         {
-            IEnumerable<Transform> tangleballPoints = GetComponentsInChildren<Transform>().Where(x => x.name.ToLower().Contains("tangleball"));
-            tangleballTop = tangleballPoints.Where(x => x.name.ToLower().Contains("top")).First();
-            tangleballBottom = tangleballPoints.Where(x => x.name.ToLower().Contains("bottom")).First();
+            tileLayerMask = LayerMask.GetMask("Tiles");
+            floorLayerMask = LayerMask.GetMask("Floor");
+
+            SetupTangleball();
         }
 
-        tangleball = new GameObject().AddComponent<Rigidbody>();
-        tangleball.name = "Tangleball";
-        tangleball.isKinematic = true;
-        tangleball.useGravity = false;
-        UpdateTangleball();
 
-    }
-
-    void UpdateTangleball()
-    {
-        tangleball.MovePosition(Vector3.Lerp(tangleballTop.position, tangleballBottom.position, 0.5f));
-    }
-
-    private void FixedUpdate()
-    {
-        UpdateTangleball();
-    }
-
-    void Levetate(TileBehaviour tile)
-    {
-        tile.state.pushAwayFromPlayer = false;
-
-        tile.state.Set(TileStateDescriptor.Angled);
-        tile.SetConstancForce(Vector3.zero);
-        runningAttractions.Add(StartCoroutine(AttractTile(tile)));
-        tilesDocked.Add(tile);
-    }
-
-    void Update()
-    {
-        // Get Tiles that can be fished this frame
-        tilesInRadiusLastFrame = tilesInRadiusThisFrame;
-        tilesInRadiusThisFrame = GetMovableColliders();
-        GetMovableColliders();
-
-		// Set feedback 
-		if (!Input.GetKey(KeyCode.Mouse0))
+        void SetupTangleball()
         {
-            tilesInRadiusLastFrame.Where(tile => tile.isAngled).ToList().ForEach(x => x.state.Set(TileStateDescriptor.InRange));
-            tilesInRadiusThisFrame.Where(tile => tile.isInRange).ToList().ForEach(x => x.state.Set(TileStateDescriptor.CanBeAngled));
-        }
-
-        // Levitatation
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            tilesInRadiusLastFrame.ForEach(tile => Levetate(tile));
-        }
-
-        if (Input.GetKeyUp(KeyCode.Mouse0)) 
-        {
-            runningAttractions.ForEach(x => StopCoroutine(x));
-            tilesDocked.ForEach(tile => tile.ReturnTileToDefaultState());
-            tilesDocked.Clear();
-        }
-    }
-
-    private IEnumerator AttractTile(TileBehaviour tile) 
-    {
-        float maxTileDistance = 30f;
-        float distanceTreshold = 0.5f;
-        bool tilesDocked = false;
-
-        while (tilesDocked == false)
-        {
-            Vector3 tileVector = tile.transform.position - tangleball.transform.position;
-            float tileDistance = tileVector.magnitude;
-
-            // Attract distant tiles
-            if (tileDistance > distanceTreshold)
+            if (!tangleball || !tangleballTop || !tangleballBottom)
             {
-                float forceValue = tileAttractiontoSqrDistance.Evaluate(tileDistance / maxTileDistance) * maxAttractionForce;
-                Vector3 forceVector = tileVector.normalized * forceValue;
-                tile.SetConstancForce(forceVector);
+                IEnumerable<Transform> tangleballPoints = GetComponentsInChildren<Transform>().Where(x => x.name.ToLower().Contains("tangleball"));
+                tangleballTop = tangleballPoints.Where(x => x.name.ToLower().Contains("top")).First();
+                tangleballBottom = tangleballPoints.Where(x => x.name.ToLower().Contains("bottom")).First();
             }
 
-            // Attatch close tiles
+            tangleball = Instantiate(tangleballPrefab).GetComponent<Rigidbody>();
+            tangleball.isKinematic = true;
+            tangleball.useGravity = false;
+            UpdateTangleball();
+
+        }
+
+        void UpdateTangleball()
+        {
+            tangleball.MovePosition(Vector3.Lerp(tangleballTop.position, tangleballBottom.position, 0.5f));
+        }
+
+        private void FixedUpdate()
+        {
+            UpdateTangleball();
+        }
+
+        void Grab(TileBehaviour tile)
+        {
+            tile.OnGrab();
+            tile.state.pushAwayFromPlayer = false;
+            tile.SetConstancForce(Vector3.zero);
+            runningAttractions.Add(StartCoroutine(AttractTile(tile)));
+            tilesDocked.Add(tile);
+        }
+
+        void Release(TileBehaviour tile)
+        {
+            int id = tilesDocked.IndexOf(tile);
+            tile.OnRelease();
+            Coroutine c = runningAttractions[id];
+            StopCoroutine(c);
+        }
+
+        void Update()
+        {
+            Vector3 overlapPoint = Vector3.zero;
+
+            if (TileSelectionMode == TileSelectionMode.Proximity)
+            {
+                overlapPoint = tangleball.transform.position;
+            }
+            else if (TileSelectionMode == TileSelectionMode.FromView)
+            {
+                Vector2 ballScreenPoint = mainCamera.WorldToScreenPoint(tangleball.position);
+                Ray ray = mainCamera.ScreenPointToRay(ballScreenPoint);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit, 100f, floorLayerMask))
+                {
+                    overlapPoint = hit.point;
+                }
+            }
+
+            List<TileBehaviour> tilesProbed = Physics.OverlapSphere(overlapPoint, anglingRadius, tileLayerMask).Select(x => x.GetComponent<TileBehaviour>()).ToList();
+            List<TileBehaviour> addTiles = tilesNear.Where(x => !tilesProbed.Contains(x)).ToList();
+            List<TileBehaviour> removeTiles = tilesProbed.Where(x => !tilesNear.Contains(x)).ToList();
+
+            bool active = Input.GetKey(KeyCode.Mouse0);
+            bool release = Input.GetKeyUp(KeyCode.Mouse0);
+            bool press = Input.GetKeyDown(KeyCode.Mouse0);
+
+            if (press || release)
+            {
+                if (press)
+                {
+                    removeTiles.ForEach(tile => tile.OnExit());
+                    addTiles.ForEach(tile => Grab(tile));
+                    tilesNear.ForEach(tile => Grab(tile));
+                    tilesNear.Clear();
+                }
+                else if (release)
+                {
+                    tilesDocked.ForEach(tile => Release(tile));
+                    removeTiles.ForEach(tile => tile.OnExit());
+                    tilesDocked.Clear();
+                    runningAttractions.Clear();
+                }
+            }
             else
             {
-                tile.DockToRigidbody(tangleball);
-                tilesDocked = true;
-             }
-            yield return null;
+                addTiles.ForEach(tile => tile.OnEnter());
+                removeTiles.ForEach(tile => tile.OnExit());
+            }
+            tilesNear = tilesProbed;
+
+            availableTiles = tilesNear.Select(tile => tile.commonTile).ToList();
+            GameManager.instance.solidCollection.Count(availableTiles, out availableTileCounts, out availableSolids);
+
         }
-     }
 
-    private List<TileBehaviour> GetMovableColliders() 
-    {
-        Vector3 overlapPoint = Vector3.zero;
 
-        // Get overlap sphere center point
 
-        if (TileSelectionMode == TileSelectionMode.simpleProximity)
+
+        private IEnumerator AttractTile(TileBehaviour tile)
         {
-            overlapPoint = tangleball.transform.position;
-        }
-        else if (TileSelectionMode == TileSelectionMode.sphereRaycast) 
-        {
-            Vector2 ballScreenPoint = mainCamera.WorldToScreenPoint(tangleball.position);
-            Ray ray = mainCamera.ScreenPointToRay(ballScreenPoint);
-            RaycastHit hit;
+            float maxTileDistance = 30f;
+            float distanceTreshold = 0.5f;
+            bool tilesDocked = false;
 
-            if (Physics.Raycast(ray, out hit, 100f, floorLayerMask)) 
+            while (tilesDocked == false)
             {
-                overlapPoint = hit.point;
+                Vector3 tileVector = tangleball.transform.position - tile.transform.position;
+                float tileDistance = tileVector.magnitude;
+
+                // Attract distant tiles
+                if (tileDistance > distanceTreshold)
+                {
+                    float forceValue = tileAttractiontoSqrDistance.Evaluate(tileDistance / maxTileDistance) * maxAttractionForce;
+                    Vector3 forceVector = tileVector.normalized * forceValue;
+                    tile.SetConstancForce(forceVector);
+                }
+
+                // Attatch close tiles
+                else
+                {
+                    tile.DockToRigidbody(tangleball);
+                    tilesDocked = true;
+                }
+                yield return null;
             }
         }
 
-        List<TileBehaviour> tilesInRadius = Physics.OverlapSphere(overlapPoint, anglingRadius, tileLayerMask).Select(x => x.GetComponent<TileBehaviour>()).ToList();
+
+        private void AddPolyheadronJoint(List<Rigidbody> anchors, Vector3 position, Quaternion rotation)
+        {
+            // create new GameObject at te centre
+            GameObject go = new GameObject("Polyheadron Centre");
+            go.transform.position = position;
+            go.transform.rotation = rotation;
+            Rigidbody centreRigidbody = go.AddComponent<Rigidbody>();
+
+            // anchor allobjects to the central rigidbody
+            for (int i = 0; i < anchors.Count; i++)
+            {
+                FixedJoint fixedJoint = anchors[i].gameObject.AddComponent<FixedJoint>();
+                fixedJoint.connectedBody = centreRigidbody;
+            }
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+
+            if (other.tag.Equals("Tile"))
+            {
+                TileBehaviour tile = other.GetComponent<TileBehaviour>();
+
+                if (tile)
+                {
+                    RegisterTile(tile);
+                }
+            }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.tag.Equals("Tile"))
+            {
+                TileBehaviour tile = other.GetComponent<TileBehaviour>();
+
+                if (tile)
+                {
+                    UnRegisterTile(tile);
+                }
+            }
+        }
+
+        void RegisterTile(TileBehaviour tile)
+        {
+            Debug.Log("Registered " + tile.name);
+
+            if (GameManager.instance.conserveVelocity)
+                tile.RestoreVelocity();
 
 
-        ////////if (tile.tileState != TileState.outOfRange)
-        ////////{
-        ////////    // if no solid connected add this tile to list
-        ////////    if (tile.solid)
-        ////////    {
-        ////////        if (!tilesInRadius.Contains(tile.solid))
-        ////////        {
-        ////////            tilesInRadius.Add(tile.solid);
-        ////////        }
-        ////////    }
+            tile.state.isInPlayerRadius = true;
 
-        ////////    // if there are solids connected add the whole solid, if it not yet on th list
-        ////////    else
-        ////////    {
-        ////////        tilesInRadius.Add(tile);
-        ////////    }
-        ////////}
+        }
 
-        return tilesInRadius;
+        void UnRegisterTile(TileBehaviour tile)
+        {
+            Debug.Log("Unregistered " + tile.name);
+
+            tile.state.isInPlayerRadius = true;
+
+            tile.SaveVelocity();
+        }
+
+        private void AddPolyheadronJoint(List<TileBehaviour> anchors, Vector3 position, Quaternion rotation) { }
     }
 
-    private void AddPolyheadronJoint(List<Rigidbody> anchors, Vector3 position, Quaternion rotation) 
-    {
-        // create new GameObject at te centre
-        GameObject go = new GameObject("Polyheadron Centre");
-        go.transform.position = position;
-        go.transform.rotation = rotation;
-        Rigidbody centreRigidbody = go.AddComponent<Rigidbody>();
-
-		// anchor allobjects to the central rigidbody
-		for (int i = 0; i < anchors.Count; i++)
-		{
-            FixedJoint fixedJoint = anchors[i].gameObject.AddComponent<FixedJoint>();
-            fixedJoint.connectedBody = centreRigidbody;
-		}
-    }
-
-    private void AddPolyheadronJoint(List<TileBehaviour> anchors, Vector3 position, Quaternion rotation) { }
 }

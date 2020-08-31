@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SolidBehavior : MonoBehaviour
+namespace XGD.TileQuest
 {
-	public List<TileBehaviour> belongingObject = new List<TileBehaviour>();
-	public GameObject center;
-
-	public void SetColor(Color color)
+	public class SolidBehavior : MonoBehaviour
 	{
-		belongingObject.ForEach(x => x.SetColor(color));
+		public List<TileBehaviour> tiles = new List<TileBehaviour>();
+		public Solid solid;
+
+		public void SetColor(Color color)
+		{
+			tiles.ForEach(x => x.SetColor(color));
+		}
 	}
+
 }

@@ -1,22 +1,15 @@
 Truncated Tetrahedron
 Cuboctahedron
-Rhombitetratetrahedron
-Truncated Cube
 Truncated Octahedron
+Truncated Cube
 Rhombicuboctahedron
-Truncated Tetratetrahedron
-Rhombicuboctahedron
-Small Rhombicuboctahedron
-Truncated Cuboctahedron
-Great Rhombicuboctahedron
-Snub Cube
-Snub Cuboctahedron
+Snub Cube (laevo)
+Snub Cube (dextro)
 Icosidodecahedron
-Truncated Dodecahedron
+Truncated Cuboctahedron
 Truncated Icosahedron
+Truncated Dodecahedron
 Rhombicosidodecahedron
-Small Rhombicosidodecahedron
+Snub Dodecahedron (laevo)
+Snub Dodecahedron (dextro)
 Truncated Icosidodecahedron
-Great Rhombicosidodecahedron
-Snub Dodecahedron
-Snub Icosidodecahedron

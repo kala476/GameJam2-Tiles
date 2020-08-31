@@ -6,161 +6,160 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 
-public class CharacterController : MonoBehaviour
+namespace XGD.TileQuest
 {
-    [Header("Controls")]
-    public bool invertAxisX;
-    public float movementSpeed = 10.0f;
-    public float rotSpeed = 500.0f;
-    public float maxHeadRotY;
-    public float maxHeadRotX;
-    [Range(0.0f, 1.0f)] public float bodyRotThreshold;
-    public AnimationCurve bodyRotMap = new AnimationCurve();
-    public AnimationCurve headRotMapX = new AnimationCurve();
-    public AnimationCurve headRotMapY = new AnimationCurve();
-
-    [Header("State")]
-    public bool movementActive;
-    private float currentHeadRotationX;
-    private float currentHeadRotationY;
-    private float currentBodyRotationX;
-    public float walkingDistance;
-
-    [Header("Input")]
-    private float mouseInputX;
-    private float mouseInputY;
-
-    [Header("Setup")]
-    public Transform head;
-    public Transform camAnchor;
-    public Transform characterRoot;
-    public new Camera camera;
-
-    private bool activeCursor;
-    private Vector3 characterBodyPosition;
-    private Quaternion characterBodyRotation;
-    private Quaternion characterHeadRotation;
-    //private Quaternion characterRootInitRotation;
-
-    //public float tiltAngle;
-    //public float tiltBackSpeed;
-    //public float angle;
-    //public float stepSize = 1.0f;
-
-    void Start()
+    public class CharacterController : MonoBehaviour
     {
-        activeCursor = true;
-        characterBodyPosition = transform.position;
-        characterBodyRotation = transform.rotation;
-        characterHeadRotation = head.localRotation;
+        [Header("Controls")]
+        public bool invertAxisX;
+        public float movementSpeed = 10.0f;
+        public float rotSpeedHead = 500.0f;
+        public float rotSpeedBody = 10.0f;
+        public float maxHeadRotY;
+        public float maxHeadRotX;
+        public float maxBodyRot;
+        [Range(0.0f, 1.0f)] public float bodyRotThreshold;
+        public AnimationCurve bodyRotMap = new AnimationCurve();
+        public AnimationCurve headRotMapX = new AnimationCurve();
+        public AnimationCurve headRotMapY = new AnimationCurve();
 
-        Assert.IsNotNull(head);
-        Assert.IsNotNull(camAnchor);
-        Assert.IsNotNull(characterRoot);
-        Assert.IsNotNull(camera);
+        [Header("State")]
+        public bool movementActive;
+        private float currentBodyRotationX;
+        public float walkingDistance;
 
-        //characterRootInitRotation = characterRoot.localRotation;
 
-    }
+        [Header("Setup")]
+        public Transform head;
+        public Transform camAnchor;
+        public Transform characterRoot;
+        public new Camera camera;
+        private Angler angler;
 
-    public Vector2 WalkInput
-    {
-        get
-        {
-            Vector2 input = Vector3.zero;
-            input += Input.GetKey(KeyCode.W) ? Vector2.up : Vector2.zero;
-            input += Input.GetKey(KeyCode.A) ? Vector2.left : Vector2.zero;
-            input += Input.GetKey(KeyCode.S) ? Vector2.down : Vector2.zero;
-            input += Input.GetKey(KeyCode.D) ? Vector2.right : Vector2.zero;
-            input += Input.GetKey(KeyCode.UpArrow) ? Vector2.up : Vector2.zero;
-            input += Input.GetKey(KeyCode.LeftArrow) ? Vector2.left : Vector2.zero;
-            input += Input.GetKey(KeyCode.DownArrow) ? Vector2.down : Vector2.zero;
-            input += Input.GetKey(KeyCode.RightArrow) ? Vector2.right : Vector2.zero;
-            return input.normalized;
-        }
-    }
+        private bool activeCursor;
 
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            activeCursor = !activeCursor;
-        }
+        private static readonly Quaternion assetRotationCorrection = Quaternion.AngleAxis(90.0f, Vector3.right);
 
-        if(Input.mousePresent && Input.GetMouseButtonDown(0))
+        void Start()
         {
             activeCursor = true;
+
+            Assert.IsNotNull(head);
+            Assert.IsNotNull(camAnchor);
+            Assert.IsNotNull(characterRoot);
+            Assert.IsNotNull(camera);
+
+            angler = GetComponent<Angler>();
         }
 
-        Cursor.visible = !activeCursor;
-        //Cursor.lockState = activeCursor ? CursorLockMode.Locked : CursorLockMode.None;
-
-        if (activeCursor && movementActive)
+        public Vector2 WalkInput
         {
-            // Get Input
-            Vector2 walkInput = WalkInput;
-            mouseInputX = Mathf.Clamp((Input.mousePosition.x / Screen.width - 0.5f) * 2.0f, -1.0f, 1.0f);
-            mouseInputY = Mathf.Clamp((Input.mousePosition.y / Screen.height - 0.5f) * 2.0f, -1.0f, 1.0f);
+            get
+            {
+                Vector2 input = Vector3.zero;
+                input += Input.GetKey(KeyCode.W) ? Vector2.up : Vector2.zero;
+                input += Input.GetKey(KeyCode.A) ? Vector2.left : Vector2.zero;
+                input += Input.GetKey(KeyCode.S) ? Vector2.down : Vector2.zero;
+                input += Input.GetKey(KeyCode.D) ? Vector2.right : Vector2.zero;
+                input += Input.GetKey(KeyCode.UpArrow) ? Vector2.up : Vector2.zero;
+                input += Input.GetKey(KeyCode.LeftArrow) ? Vector2.left : Vector2.zero;
+                input += Input.GetKey(KeyCode.DownArrow) ? Vector2.down : Vector2.zero;
+                input += Input.GetKey(KeyCode.RightArrow) ? Vector2.right : Vector2.zero;
+                return input.normalized;
+            }
+        }
 
-            float screenExceedX = (Mathf.Abs(mouseInputX) - bodyRotThreshold) / (1.0f - bodyRotThreshold);
-
-            currentBodyRotationX += Mathf.Sign(mouseInputX) * bodyRotMap.Evaluate(screenExceedX) * Time.deltaTime * rotSpeed;
-            currentHeadRotationX = Mathf.Sign(mouseInputX) * headRotMapX.Evaluate(Mathf.Abs(mouseInputX)) * maxHeadRotX;
-            currentHeadRotationY = Mathf.Sign(mouseInputY) * headRotMapY.Evaluate(Mathf.Abs(mouseInputY)) * maxHeadRotY;
-
-            // Get Inversion
-            float invert = invertAxisX ? 1.0f : 0.0f;
-
-            // Set camera position
-            camera.transform.position = camAnchor.position;
-            camera.transform.rotation = Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.position - camAnchor.position, Vector3.up), Vector3.up);
-
-            // Calculation Character Position
-            Vector3 motionVector = Vector3.zero;
-            motionVector += Vector3.ProjectOnPlane(camera.transform.right, Vector3.up) * walkInput.x; 
-            motionVector += Vector3.ProjectOnPlane(camera.transform.forward, Vector3.up) * walkInput.y;
-            motionVector *= movementSpeed * Time.deltaTime;
-
-            if (motionVector.magnitude < 0.001f) motionVector = Vector3.zero;
-
-            characterBodyPosition = transform.position + motionVector;            
-
-            // Calculate Character Rotation
-            bool correct = true;
-            Quaternion corrective = correct ? Quaternion.AngleAxis(90.0f, Vector3.right) : Quaternion.identity;
-            characterHeadRotation = corrective * Quaternion.Euler(-currentHeadRotationY, currentHeadRotationX, 0);
-            characterBodyRotation = Quaternion.Euler(0.0f, currentBodyRotationX, 0.0f);
-
-            // Calculate Walking Distance
-            walkingDistance += motionVector.magnitude;
-            //walkingDistance %= stepSize;
+        public Vector2 ViewInput
+        {
+            get
+            {
+                return new Vector2()
+                {
+                    x = Mathf.Clamp((Input.mousePosition.x / Screen.width - 0.5f) * 2.0f, -1.0f, 1.0f),
+                    y = Mathf.Clamp((Input.mousePosition.y / Screen.height - 0.5f) * 2.0f, -1.0f, 1.0f)
+                };
+            }
+        }
 
 
-            //float t, scale, snap;
-            //t = (walkingDistance / stepSize) % 1.0f;
-            ////snap = -0.5f * (((2.0f * t - 0.5f) % 1.0f) - 0.5f) + 0.25f;
-            //snap = Mathf.Sin(2.0f * Mathf.PI * t);
-            //t += Mathf.Clamp01(tiltBackSpeed * Time.deltaTime) * snap;
-            //t %= 1.0f;
-            //scale = 4.0f * Mathf.Abs(((t - 0.25f) % 1.0f) - 0.5f) - 1.0f;
-            //angle = tiltAngle * scale;
-            ////angle = tiltAngle * Mathf.Sin(2.0f * Mathf.PI * t);
+        public Vector3 WalkFromView
+        {
+            get
+            {
+                Vector2 walkInput = WalkInput;
+                Vector3 motionVector = Vector3.zero;
+                if (walkInput.magnitude > 0.001f)
+                {
+                    motionVector += Vector3.ProjectOnPlane(camera.transform.right, Vector3.up) * walkInput.x;
+                    motionVector += Vector3.ProjectOnPlane(camera.transform.forward, Vector3.up) * walkInput.y;
+                }
+                return motionVector.normalized;
+            }
+        }
 
-            //walkingDistance = Mathf.Floor(walkingDistance/stepSize)*stepSize + t * stepSize;
-                        
+        public float ProjectedLength(Vector3 vector, Vector3 normal)
+        {
+            Vector3 p = Vector3.Project(vector, normal);
+            return p.normalized == normal ? p.magnitude : 0.0f;
+        }
 
-            // Calculate Head Rotation
-            //Quaternion tilt = Quaternion.AngleAxis(angle, Vector3.up);
-            //characterRoot.localRotation = characterRootInitRotation * tilt;
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                activeCursor = !activeCursor;
+                GameManager.TogglePauseMenu();
+                return;
+            }
 
-            head.localRotation = characterHeadRotation;
-            transform.position = characterBodyPosition;
-            transform.rotation = characterBodyRotation;
+            if (Input.mousePresent && Input.GetMouseButtonDown(0))
+            {
+                activeCursor = true;
+            }
+
+            Cursor.visible = !activeCursor;
+
+            if (activeCursor && movementActive)
+            {
+                Vector3 motionVector = WalkFromView;
+                Vector2 mouseInput = ViewInput;
+
+                float dRotFromWalk = Utility.SignedAngle(transform.forward, motionVector);
+                float headOverdrive = (Mathf.Abs(mouseInput.x) - bodyRotThreshold) / (1.0f - bodyRotThreshold);
+                float dRotFromView = Mathf.Sign(mouseInput.x) * bodyRotMap.Evaluate(headOverdrive) * maxHeadRotX;
+                float currentHeadRotationX = Mathf.Sign(mouseInput.x) * headRotMapX.Evaluate(Mathf.Abs(mouseInput.x)) * maxHeadRotX;
+                float currentHeadRotationY = Mathf.Sign(mouseInput.y) * headRotMapY.Evaluate(Mathf.Abs(mouseInput.y)) * maxHeadRotY;
+
+                float dWalkDist = ProjectedLength(motionVector, transform.forward) * movementSpeed * Time.deltaTime;
+                float dWalkRot = dRotFromWalk * rotSpeedBody * Time.deltaTime;
+                float dViewRot = dRotFromView * rotSpeedHead * Time.deltaTime;
+                float dBodyRotUnclamped = dWalkRot + dViewRot;
+                float dBodyRot = Mathf.Clamp(dBodyRotUnclamped, -maxBodyRot, maxBodyRot);
+                float ratio = dBodyRotUnclamped == 0 ? 0.0f : (dBodyRot / dBodyRotUnclamped);
+                dWalkRot *= ratio;
+                dViewRot *= ratio;
+
+                walkingDistance += dWalkDist;
+                currentBodyRotationX += dBodyRot;
+                currentHeadRotationX -= dWalkRot;
+
+                // Apply to character transform
+                head.localRotation = assetRotationCorrection * Quaternion.Euler(-currentHeadRotationY, currentHeadRotationX, 0); ;
+                transform.position = transform.position + transform.forward * dWalkDist;
+                transform.rotation = Quaternion.Euler(0.0f, currentBodyRotationX, 0.0f);
+
+                // Apply to camera
+                Vector3 viewTarget = Vector3.ProjectOnPlane(Vector3.Lerp(transform.position, angler.tangleball.transform.position, Mathf.Abs(dViewRot)), Vector3.up);
+                camAnchor.localPosition = Quaternion.AngleAxis(-dWalkRot, Vector3.up) * camAnchor.localPosition;
+                camera.transform.position = camAnchor.position;
+                camera.transform.rotation = Quaternion.LookRotation(viewTarget - camAnchor.position, Vector3.up);
+            }
+        }
+
+        public void SetMovementPaused(bool value)
+        {
+            movementActive = !value;
         }
     }
 
-    public void SetMovementPaused(bool value) 
-    {
-        movementActive = !value;
-    }
 }
